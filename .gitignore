@@ -1,0 +1,79 @@
+# ===========================================================================
+# .gitignore — Planner (Flutter · Clean Architecture · Neon)
+# Generado a partir del .gitignore oficial de Flutter + exclusiones del taller
+# ===========================================================================
+
+# ------------------------------ Misceláneos --------------------------------
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+*.sh
+*.ps1
+# ------------------------- IntelliJ / Android Studio -----------------------
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# ------------------------------- VS Code -----------------------------------
+# Descomenta la línea de abajo solo si NO quieres compartir launch.json,
+# tasks.json y extensions.json con el equipo.
+#.vscode/
+.vscode/*.log
+
+# --------------------------- Flutter / Dart / Pub ---------------------------
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+.packages
+
+# ------------------------- Generación de símbolos ---------------------------
+app.*.symbols
+app.*.map.json
+
+# ------------------------- Salidas de build Android -------------------------
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# ------------------------------- Web / Deploy --------------------------------
+# La salida de `flutter build web` (build/web) ya queda cubierta por /build/.
+.firebase/
+.firebase/hosting.*.cache
+
+# -------------------------------- Pruebas -----------------------------------
+coverage/
+*.lcov
+
+# --------------------- Secretos y credenciales (Neon) ------------------------
+# Ninguna cadena de conexión ni clave de API debe llegar al repositorio.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ------------------------------ Android signing -----------------------------
+# Firma de la app y configuración local del SDK.
+android/local.properties
+android/key.properties
+*.jks
+*.keystore
+
+# --------------------------- Servicios de Google ----------------------------
+google-services.json
+GoogleService-Info.plist
