@@ -16,8 +16,15 @@
 .svn/
 .swiftpm/
 migrate_working_dir/
+Thumbs.db
+*.orig
+*.rej
+
+# Scripts auxiliares de scaffolding: se excluyen del repo por acuerdo del equipo.
+# Si deciden versionarlos, comenten estas dos líneas.
 *.sh
 *.ps1
+
 # ------------------------- IntelliJ / Android Studio -----------------------
 *.iml
 *.ipr
@@ -40,6 +47,10 @@ migrate_working_dir/
 .pub/
 /build/
 .packages
+
+# --------------------------- Gradle / Kotlin --------------------------------
+.gradle/
+**/.kotlin/
 
 # ------------------------- Generación de símbolos ---------------------------
 app.*.symbols
@@ -77,3 +88,5 @@ android/key.properties
 # --------------------------- Servicios de Google ----------------------------
 google-services.json
 GoogleService-Info.plist
+
+# docs/ NO se ignora: la guía en PDF/HTML es parte del entregable del taller.
