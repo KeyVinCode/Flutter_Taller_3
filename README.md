@@ -30,9 +30,9 @@ Alcance funcional:
 | Componente | Estado | Observaciones |
 | --- | --- | --- |
 | Estructura Clean Architecture (`lib/`) | ✅ Lista | Encarpetado completo del taller, con `.gitkeep` en carpetas vacías |
-| Proyecto Flutter (Android + Web) | ⏳ Pendiente | Falta `pubspec.yaml` y las carpetas `android/` y `web/` |
+| Proyecto Flutter (Android + Web) | ✅ Listo | Proyecto y targets Android/Web creados |
 | Capa `domain` (entidades, contratos, casos de uso) | ⏳ En curso | Responsable: Domain Architect |
-| Capa `data` (datasources, models, repositories) | ⏳ En curso | Responsable: Backend & Data Engineer |
+| Puente PostgREST (cliente, datasource y models) | ✅ Implementado | Usa JWT externo; falta configurar/desplegar la API y sus permisos |
 | Capa `presentation` (bloc, pages, widgets) | ⏳ En curso | Responsables: UI/UX y State & Integration Dev |
 | Esquema SQL en Neon | ⏳ Pendiente | Responsable: Tech Lead / DevOps |
 | API REST desplegada | ⏳ Pendiente | — |
@@ -47,8 +47,7 @@ Alcance funcional:
 | Recurso | URL | Estado |
 | --- | --- | --- |
 | 🌐 Web (Flutter Web) | `https://<tu-app>.web.app` | ⏳ Pendiente |
-| 🔌 API REST | `https://<tu-api>.onrender.com/api/v1` | ⏳ Pendiente |
-| 🩺 Health check API | `https://<tu-api>.onrender.com/health` | ⏳ Pendiente |
+| 🔌 Neon Data API / PostgREST | `https://<endpoint-postgrest>` | ⏳ Pendiente |
 | 🗄️ Consola Neon | `https://console.neon.tech/app/projects/<project-id>` | ⏳ Pendiente |
 | 📦 Repositorio | `https://github.com/<organizacion>/<repositorio>` | ⏳ Pendiente |
 
@@ -72,10 +71,10 @@ Alcance funcional:
 | --- | --- | --- |
 | Framework | Flutter `>= 3.24` (Dart `>= 3.5`) | UI multiplataforma (Android y Web) |
 | Gestión de estado | `flutter_bloc` + `equatable` | Eventos y estados inmutables |
-| Inyección de dependencias | `get_it` | Registro de datasources, repositorios y casos de uso |
-| Cliente HTTP | `dio` | Consumo de la API REST |
+| Inyección de dependencias | Pendiente | Registrar datasources, repositorios y casos de uso al integrar `domain` |
+| Cliente HTTP | `http` | Consumo de PostgREST |
 | Formato de fechas | `intl` | Localización `es_CO` y formateo de fecha/hora |
-| Backend | REST (PostgREST o FastAPI) | Exposición segura de la base de datos |
+| Backend | Neon Data API (PostgREST) | Acceso REST a PostgreSQL con JWT y RLS |
 | Base de datos | Neon · PostgreSQL Serverless | Persistencia de eventos y categorías |
 
 > Ninguna credencial de Neon se almacena en el cliente: la app solo conoce la URL
@@ -114,7 +113,7 @@ lib/
 
 | Capa | Contenido | Regla de dependencia |
 | --- | --- | --- |
-| `core` | Constantes, errores, cliente HTTP, utilidades | Puede ser usado por cualquier capa |
+| `core` | Configuración, errores, cliente HTTP, utilidades | Puede ser usado por cualquier capa |
 | `domain` | Entidades, contratos de repositorio y casos de uso | **No** importa `data` ni `presentation` ni paquetes de UI |
 | `data` | Models, datasources y repositorios | Implementa los contratos de `domain` |
 | `presentation` | Bloc, pages y widgets | Consume casos de uso a través de `get_it` |
@@ -127,62 +126,91 @@ lib/
 
 ## 🗄️ Modelo de datos (Neon · PostgreSQL)
 
-Esquema base desplegado por el Tech Lead / DevOps. Extensión requerida:
-`pgcrypto` (para `gen_random_uuid()`).
+El puente Flutter se alinea con el esquema actual de [`database/schema.sql`](database/schema.sql).
+Los identificadores son `BIGINT`, las fechas son `TIMESTAMP` y las tablas pertenecen a cada
+usuario mediante `usuario_id`.
+
+### Tabla `usuarios`
+
+| Columna | Tipo | Restricciones |
+| --- | --- | --- |
+| `id` | `bigint` | PK, identity |
+| `nombre` | `varchar(100)` | `NOT NULL` |
+| `email` | `varchar(150)` | `NOT NULL`, `UNIQUE` |
+| `password_hash` | `text` | `NOT NULL` |
+| `created_at` | `timestamp` | `NOT NULL`, `DEFAULT now()` |
+
+El cliente Flutter no consulta ni administra `usuarios`/`password_hash`. La autenticación debe
+ser responsabilidad de un proveedor confiable que emita JWT; no implementes login comparando
+contraseñas desde la app.
 
 ### Tabla `categorias`
 
 | Columna | Tipo | Restricciones |
 | --- | --- | --- |
-| `id` | `uuid` | PK, `DEFAULT gen_random_uuid()` |
-| `nombre` | `varchar(60)` | `NOT NULL`, `UNIQUE` |
-| `color` | `varchar(9)` | `NOT NULL`, `DEFAULT '#3F51B5'` |
-| `created_at` | `timestamptz` | `NOT NULL`, `DEFAULT now()` |
+| `id` | `bigint` | PK, identity |
+| `usuario_id` | `bigint` | FK → `usuarios(id)`, `ON DELETE CASCADE` |
+| `nombre` | `varchar(80)` | `NOT NULL` |
+| `color_hex` | `char(7)` | `NOT NULL`, `DEFAULT '#2196F3'` |
+| `created_at` | `timestamp` | `NOT NULL`, `DEFAULT now()` |
 
 ### Tabla `eventos`
 
 | Columna | Tipo | Restricciones |
 | --- | --- | --- |
-| `id` | `uuid` | PK, `DEFAULT gen_random_uuid()` |
-| `titulo` | `varchar(120)` | `NOT NULL` |
+| `id` | `bigint` | PK, identity |
+| `usuario_id` | `bigint` | FK → `usuarios(id)`, `ON DELETE CASCADE` |
+| `categoria_id` | `bigint` | FK → `categorias(id)`, `ON DELETE SET NULL` |
+| `titulo` | `varchar(150)` | `NOT NULL` |
 | `descripcion` | `text` | Nulo permitido |
-| `fecha_inicio` | `timestamptz` | `NOT NULL` |
-| `fecha_fin` | `timestamptz` | `NOT NULL`, `CHECK (fecha_fin >= fecha_inicio)` |
-| `todo_el_dia` | `boolean` | `NOT NULL`, `DEFAULT false` |
-| `recordatorio_minutos` | `integer` | Nulo permitido, `CHECK (>= 0)` |
-| `categoria_id` | `uuid` | FK → `categorias(id)` `ON DELETE SET NULL` |
-| `created_at` | `timestamptz` | `NOT NULL`, `DEFAULT now()` |
-| `updated_at` | `timestamptz` | `NOT NULL`, `DEFAULT now()` |
+| `ubicacion` | `varchar(200)` | Nulo permitido |
+| `fecha_inicio`, `fecha_fin` | `timestamp` | `NOT NULL`, `fecha_fin >= fecha_inicio` |
+| `created_at`, `updated_at` | `timestamp` | `NOT NULL`, `DEFAULT now()` |
 
-Índices sugeridos: `eventos(fecha_inicio)`, `eventos(categoria_id)` y
-`categorias(nombre)`.
+El esquema actual no incluye `todo_el_dia` ni recordatorios. Las fechas se envían en UTC
+(ISO 8601) y se convierten al tipo `timestamp` de PostgreSQL.
 
 ---
 
-## 🔌 Contrato de la API REST
+## 🔌 Puente Flutter → Neon Data API / PostgREST
 
-Base: `/api/v1`. Respuestas en JSON y errores con formato
-`{ "message": "...", "code": "..." }`.
+`PlannerRemoteDataSource` consulta las tablas `eventos` y `categorias` de PostgREST. La URL
+configurada debe ser la raíz de la API PostgREST de Neon e incluir el prefijo/versionado que
+indique la consola de Neon. La capa envía un JWT como `Authorization: Bearer ...`; el token lo
+provee el servicio de autenticación de la aplicación, nunca se guarda en el código ni en
+parámetros de compilación.
 
-| Método | Endpoint | Descripción | Cuerpo principal |
-| --- | --- | --- | --- |
-| `GET` | `/eventos` | Lista eventos (filtros `desde`, `hasta`, `categoria_id`) | — |
-| `GET` | `/eventos/{id}` | Obtiene un evento por id | — |
-| `POST` | `/eventos` | Crea un evento | `titulo`, `descripcion`, `fecha_inicio`, `fecha_fin`, `todo_el_dia`, `categoria_id` |
-| `PUT` | `/eventos/{id}` | Actualiza un evento | Campos editables |
-| `DELETE` | `/eventos/{id}` | Elimina un evento | — |
-| `GET` | `/categorias` | Lista categorías | — |
-| `POST` | `/categorias` | Crea una categoría | `nombre`, `color` |
+| Operación | Recurso PostgREST | Comportamiento |
+| --- | --- | --- |
+| Listar eventos | `GET /eventos` | Filtra por usuario; opcionalmente por fechas y categoría |
+| Crear evento | `POST /eventos` | Envía las columnas del esquema y recibe la fila creada |
+| Actualizar evento | `PATCH /eventos?id=eq.<id>&usuario_id=eq.<usuario>` | Actualiza campos y `updated_at` |
+| Eliminar evento | `DELETE /eventos?id=eq.<id>&usuario_id=eq.<usuario>` | Elimina el evento del usuario |
+| Listar categorías | `GET /categorias` | Filtra por usuario |
+| Crear categoría | `POST /categorias` | Envía `usuario_id`, `nombre` y `color_hex` |
 
-Códigos: `200` consulta/actualización, `201` creación, `204` eliminación,
-`400` validación, `404` no encontrado, `500` error del servidor.
+### Configurar y usar
 
-| Endpoint | Caso de uso (`domain/usecases`) |
-| --- | --- |
-| `POST /eventos` | `CrearEvento` |
-| `GET /eventos` | `ListarEventos` |
-| `PUT /eventos/{id}` | `ActualizarEvento` |
-| `DELETE /eventos/{id}` | `EliminarEvento` |
+```bash
+flutter run -d chrome --dart-define=NEON_DATA_API_URL=https://<endpoint-postgrest>
+flutter run -d android --dart-define=NEON_DATA_API_URL=https://<endpoint-postgrest>
+```
+
+`NeonDataApiConfig.fromEnvironment()` lee esa URL. Al integrar el proveedor de autenticación,
+inyecta su función de token en `PostgrestClient` y registra el datasource en el punto de
+inyección de dependencias:
+
+```dart
+final client = PostgrestClient(
+  config: NeonDataApiConfig.fromEnvironment(),
+  accessTokenProvider: authSession.getAccessToken,
+);
+final plannerDataSource = PlannerRemoteDataSource(client: client);
+```
+
+El datasource ofrece `listarEventos`, `crearEvento`, `actualizarEvento`, `eliminarEvento`,
+`listarCategorias` y `crearCategoria`. Las respuestas de PostgREST se validan y sus errores
+se propagan con código y detalles; una respuesta sin JWT se rechaza antes de hacer la petición.
 
 ---
 
@@ -212,13 +240,9 @@ flutter build web --release
 flutter build apk --release
 ```
 
-### Configuración de la URL de la API
-
-La URL vive en `lib/core/constants/` y puede sobreescribirse en compilación:
-
-```bash
-flutter run -d chrome --dart-define=API_BASE_URL=https://<tu-api>.onrender.com/api/v1
-```
+La URL de Neon Data API se configura mediante `--dart-define=NEON_DATA_API_URL=...`, como se
+describe en la sección del puente PostgREST. La URL es pública; no pases secretos ni tokens con
+`--dart-define`.
 
 ---
 
@@ -295,8 +319,13 @@ git push origin main --tags
 
 ## 🔐 Notas de seguridad
 
-- La cadena de conexión de Neon **nunca** se incluye en el repositorio ni en el cliente Flutter; se usa como variable de entorno del backend.
-- Configura `Row Level Security` si se expone Neon vía PostgREST, o valida los datos en FastAPI.
+- La cadena de conexión de Neon y las credenciales de base de datos **nunca** se incluyen en el
+  repositorio ni en Flutter. `NEON_DATA_API_URL` es solo la URL pública del endpoint; no es una
+  credencial.
+- Antes de exponer las tablas, habilita RLS y concede acceso solo al rol autenticado. Las
+  políticas deben vincular `usuario_id` con un claim del JWT firmado por un proveedor confiable.
+  Los filtros por usuario del cliente son conveniencia, no control de acceso.
+- No uses una clave `service_role`, contraseña de base de datos ni JWT privilegiado en la app.
 - Habilita CORS únicamente para el dominio de la app web.
 - No subir `*.env`, `key.properties`, `google-services.json` ni archivos de firma (ver `.gitignore`).
 
