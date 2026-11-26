@@ -119,8 +119,12 @@ lib/
 | `presentation` | Bloc, pages y widgets | Consume casos de uso a través de `get_it` |
 
 **Flujo de una acción (ejemplo: crear evento):**
-`FormPage` → `PlannerBloc` → `CrearEventoUseCase` → `PlannerRepository` (contrato)
-→ `PlannerRepositoryImpl` → `PlannerRemoteDataSource` → API REST → Neon.
+`FormPage` → `PlannerBloc` → caso de uso → `AgendaRepository` (contrato)
+→ `AgendaRepositoryImpl` → `PlannerRemoteDataSource` → API REST → Neon.
+
+`EventoModel` serializa el esquema SQL con `fromJson`/`toJson` y payloads separados para
+inserción y actualización. El repositorio conserva los errores PostgREST y los clasifica como
+errores de red, autenticación, SQLSTATE, API o formato para que presentación pueda manejarlos.
 
 ---
 
