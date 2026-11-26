@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Planner · Guia de estructura, reglas de GitHub y GitFlow</title>
+<style>
+  @page { size: A4; margin: 17mm 15mm 17mm 15mm; }
+  * { box-sizing: border-box; }
+
+  /* Fuerza la impresión de fondos y colores (encabezados de tabla, cajas, código) */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  body {
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    font-size: 10.4pt;
+    line-height: 1.52;
+    color: #1f2430;
+    margin: 0;
+  }
+
+  /* ---------------------------- Portada ---------------------------- */
+  .cover {
+    border: 2px solid #3949ab;
+    border-radius: 10px;
+    padding: 26px 28px 22px;
+    margin-bottom: 26px;
+    background: linear-gradient(135deg, #eef0fb 0%, #ffffff 65%);
+  }
+  .cover .eyebrow {
+    font-size: 8.6pt;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+    color: #5c6bc0;
+    font-weight: 700;
+    margin: 0 0 8px;
+  }
+  .cover h1 { font-size: 25pt; line-height: 1.15; color: #283593; margin: 0 0 8px; }
+  .cover .subtitle { font-size: 11.4pt; color: #3f4a63; margin: 0 0 16px; }
+  .cover .meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 18px;
+    font-size: 9.4pt;
+    color: #4a5468;
+    border-top: 1px solid #c5cae9;
+    padding-top: 12px;
+  }
+  .cover .meta strong { color: #283593; }
+
+  /* --------------------------- Tipografia -------------------------- */
+  h2 {
+    font-size: 15pt;
+    color: #283593;
+    margin: 26px 0 8px;
+    padding-bottom: 4px;
+    border-bottom: 2px solid #c5cae9;
+    page-break-after: avoid;
+  }
+  h3 {
+    font-size: 11.6pt;
+    color: #3949ab;
+    margin: 16px 0 5px;
+    page-break-after: avoid;
+  }
+  p { margin: 6px 0; text-align: justify; }
+  ul, ol { margin: 6px 0 10px; padding-left: 20px; }
+  li { margin: 3px 0; }
+  a { color: #3949ab; text-decoration: none; }
+  a { color: #3949ab; text-decoration: none; }
+
+  /* ---------------------------- Tablas ----------------------------- */
+  table { width: 100%; border-collapse: collapse; font-size: 9.2pt; margin: 9px 0 14px; }
+  th { background: #e8eaf6; color: #283593; text-align: left; font-weight: 700; }
+  th, td { border: 1px solid #c5cae9; padding: 5px 7px; vertical-align: top; }
+  tr { page-break-inside: avoid; }
+  tbody tr:nth-child(even) { background: #fafbff; }
+
+  /* --------------------------- Codigo ------------------------------ */
+  code {
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 9pt;
+    background: #f1f3f9;
+    border: 1px solid #dfe3f0;
+    border-radius: 3px;
+    padding: 0 3px;
+    color: #2b3268;
+  }
+  pre {
+    background: #f6f7fc;
+    color: #1f2430;
+    border: 1px solid #dfe3f0;
+    border-left: 4px solid #3949ab;
+    border-radius: 6px;
+    padding: 9px 12px;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 8.6pt;
+    line-height: 1.45;
+    white-space: pre-wrap;
+    page-break-inside: avoid;
+    margin: 8px 0 14px;
+  }
+  pre code { background: none; border: none; padding: 0; color: inherit; font-size: inherit; }
+
+  /* --------------------------- Avisos ------------------------------ */
+  .box {
+    border-left: 4px solid #7986cb;
+    background: #f4f5fc;
+    padding: 8px 12px;
+    margin: 10px 0 14px;
+    border-radius: 0 6px 6px 0;
+    font-size: 9.6pt;
+    page-break-inside: avoid;
+  }
+  .box strong { color: #283593; }
+  .box.warn { border-left-color: #e57373; background: #fdf3f3; }
+  .box.warn strong { color: #b3261e; }
+  .box.ok { border-left-color: #4caf50; background: #f2faf3; }
+  .box.ok strong { color: #1b5e20; }
+
+  /* --------------------------- Diagrama ---------------------------- */
+  .flow {
+    display: flex;
+    align-items: stretch;
+    gap: 6px;
+    margin: 12px 0 16px;
+    font-size: 8.4pt;
+    page-break-inside: avoid;
+  }
+  .flow .step {
+    flex: 1;
+    border: 1px solid #c5cae9;
+    border-radius: 6px;
+    padding: 7px 6px;
+    text-align: center;
+    background: #f8f9fe;
+  }
+  .flow .step b { display: block; color: #283593; font-size: 8.8pt; margin-bottom: 3px; }
+  .flow .arrow { align-self: center; color: #7986cb; font-size: 13pt; font-weight: 700; }
+
+  .page-break { page-break-before: always; }
+  .small { font-size: 8.8pt; color: #5b6478; }
+  .center { text-align: center; }
+</style>
+</head>
+<body>
+
+<!-- ============================ PORTADA ============================ -->
+<div class="cover">
+  <p class="eyebrow">Taller 3 · Flutter · Actividad 8</p>
+  <h1>Planner — Gestor de Agenda</h1>
+  <p class="subtitle">Guía de estructura del repositorio, reglas del equipo y proceso para subir una rama <b>feature/</b></p>
+  <div class="meta">
+    <div><strong>Programa:</strong> SENA · Formación en desarrollo de software</div>
+    <div><strong>Stack:</strong> Flutter (Android + Web) · Clean Architecture</div>
+    <div><strong>Backend:</strong> Neon (PostgreSQL Serverless) + API REST</div>
+    <div><strong>Metodología:</strong> GitFlow con Pull Requests</div>
+    <div><strong>Equipo:</strong> 5 aprendices con roles definidos</div>
+    <div><strong>Versión:</strong> 1.1 · Noviembre de 2026</div>
+  </div>
+</div>
+
+<h2>1. Objetivo del documento</h2>
+<p>
+  Este documento reúne las tres reglas de trabajo que el equipo debe respetar para que el proyecto
+  <b>Planner</b> sea evaluable y mantenible: (1) cómo está organizado el repositorio y sus carpetas,
+  (2) qué reglas del repositorio están activas, y (3) el proceso paso a paso para subir una parte del
+  proyecto en una rama <code>feature/&lt;nombre-de-la-rama&gt;</code>.
+</p>
+<p>
+  Está dirigido a los cinco integrantes y al instructor que evalúa. Cualquier integrante debe poder
+  tomar una tarea, crear su rama, subir el trabajo y conseguir que se integre a <code>develop</code>
+  sin depender de otra persona.
+</p>
+
+<div class="box">
+  <strong>Regla de oro:</strong> nada llega a <code>main</code> ni a <code>develop</code> por <i>push</i>
+  directo. Todo cambio entra por Pull Request revisado y aprobado por dos compañeros, uno de ellos el
+  Tech Lead.
+</div>
+
+<!-- ======================= 2. ESTRUCTURA ========================== -->
+<h2>2. Estructura del repositorio</h2>
+
+<h3>2.1 Vista general de la raíz</h3>
+<pre><code>Actividad-8flutter/
+├── lib/                       Código fuente de la aplicación (Clean Architecture)
+├── docs/                      Documentación del proyecto (guía HTML y PDF)
+├── .gitignore                 Exclusiones de Git (secretos, builds, .env)
+├── README.md                  Documentación técnica, enlaces de API y Web, GitFlow
+├── create_structure.sh        Script que regenera el encarpetado (Git Bash / WSL)
+└── create_structure.ps1       Script que regenera el encarpetado (Windows)</code></pre>
+
+<p class="small">
+  Al ejecutar <code>flutter create --platforms=android,web .</code> se sumarán las carpetas
+  <code>android/</code>, <code>web/</code>, <code>test/</code> y el archivo <code>pubspec.yaml</code>.
+</p>
+
+<h3>2.2 Estructura de <code>lib/</code></h3>
+<pre><code>lib/
+├── core/
+│   ├── constants/        URLs de API, claves, rutas
+│   ├── errors/           Manejo de excepciones y Failures
+│   ├── network/          Cliente HTTP (Dio/Http) y estado de red
+│   └── utils/            Formateadores de fecha, validadores
+├── features/
+│   └── planner/
+│       ├── data/
+│       │   ├── datasources/   Conexión remota (API/Neon) y local (caché)
+│       │   ├── models/        Mapeo JSON &lt;-&gt; Entidad (fromJson / toJson)
+│       │   └── repositories/  Implementación de los contratos de dominio
+│       ├── domain/
+│       │   ├── entities/      Objetos de negocio puros (Evento, Categoria)
+│       │   ├── repositories/  Interfaces / Contratos abstractos
+│       │   └── usecases/      Casos de uso (CrearEvento, ListarEventos, etc.)
+│       └── presentation/
+│           ├── bloc/          Gestión de estado (Bloc / Provider)
+│           ├── pages/         Pantallas completas (HomePage, FormPage)
+│           └── widgets/       Componentes reutilizables (EventCard, CustomInput)
+└── main.dart              Punto de entrada de la aplicación</code></pre>
+
+<h3>2.3 Qué se escribe en cada carpeta</h3>
+<table>
+  <thead>
+    <tr><th style="width:26%">Carpeta</th><th style="width:33%">Contenido</th><th>Regla de dependencia</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>core/constants</code></td><td>URL base de la API, rutas internas, claves públicas.</td><td>Puede usarse desde cualquier capa.</td></tr>
+    <tr><td><code>core/errors</code></td><td>Excepciones propias y modelos de <i>Failure</i>.</td><td>Sin dependencias de Flutter.</td></tr>
+    <tr><td><code>core/network</code></td><td>Cliente Dio/http, interceptores, estado de conexión.</td><td>Lo usa solo la capa <code>data</code>.</td></tr>
+    <tr><td><code>core/utils</code></td><td>Formateo de fechas (<code>intl</code>), validadores de formularios.</td><td>Sin dependencias de UI.</td></tr>
+    <tr><td><code>data/datasources</code></td><td>Llamadas HTTP a la API y, si aplica, caché local.</td><td>Implementa lo que exige el dominio.</td></tr>
+    <tr><td><code>data/models</code></td><td>Clases con <code>fromJson</code> / <code>toJson</code> y mapeo a entidades.</td><td>Depende de <code>domain/entities</code>.</td></tr>
+    <tr><td><code>data/repositories</code></td><td>Implementación concreta del contrato del dominio.</td><td>Implementa <code>domain/repositories</code>.</td></tr>
+    <tr><td><code>domain/entities</code></td><td><code>Evento</code>, <code>Categoria</code>: objetos puros e inmutables.</td><td><b>No</b> importa Flutter, Dio ni la base de datos.</td></tr>
+    <tr><td><code>domain/repositories</code></td><td>Interfaces abstractas (<code>PlannerRepository</code>).</td><td>No conoce implementaciones.</td></tr>
+    <tr><td><code>domain/usecases</code></td><td><code>CrearEvento</code>, <code>ListarEventos</code>, <code>ActualizarEvento</code>, <code>EliminarEvento</code>.</td><td>Orquesta entidades y contratos.</td></tr>
+    <tr><td><code>presentation/bloc</code></td><td>Eventos, estados y Bloc del feature.</td><td>Llama casos de uso, nunca datasources.</td></tr>
+    <tr><td><code>presentation/pages</code></td><td>Pantallas completas conectadas al Bloc.</td><td>Depende de <code>bloc</code> y <code>widgets</code>.</td></tr>
+    <tr><td><code>presentation/widgets</code></td><td>Calendario, tarjetas de evento, inputs y tema visual.</td><td>Widgets sin lógica de negocio.</td></tr>
+  </tbody>
+</table>
+
+<div class="box">
+  <strong>Dirección de las dependencias:</strong> <code>presentation</code> conoce a <code>domain</code>;
+  <code>data</code> implementa a <code>domain</code>; <code>domain</code> no conoce a nadie.
+  Si una entidad necesita importar Flutter o Dio, está mal diseñada.
+</div>
+
+<h3>2.4 Archivos que nunca deben subirse</h3>
+<table>
+  <thead><tr><th style="width:36%">Archivo / patrón</th><th>Motivo</th></tr></thead>
+  <tbody>
+    <tr><td><code>.env</code>, <code>.env.*</code></td><td>Contienen la cadena de conexión de Neon y claves de API.</td></tr>
+    <tr><td><code>android/key.properties</code>, <code>*.jks</code>, <code>*.keystore</code></td><td>Firma de la aplicación.</td></tr>
+    <tr><td><code>build/</code>, <code>.dart_tool/</code></td><td>Artefactos generados; se reconstruyen con <code>flutter pub get</code>.</td></tr>
+    <tr><td><code>google-services.json</code>, <code>GoogleService-Info.plist</code></td><td>Credenciales de servicios de Google.</td></tr>
+  </tbody>
+</table>
+<p class="small">
+  El archivo <code>.env.example</code> sí se versiona: es la plantilla con las variables vacías que
+  cada integrante copia a su propio <code>.env</code>.
+</p>
+
+<!-- ===================== 3. REGLAS DE GITHUB ======================= -->
+<h2 class="page-break">3. Reglas del repositorio</h2>
+
+<h3>3.1 Ramas y nivel de protección</h3>
+<table>
+  <thead>
+    <tr><th style="width:22%">Rama</th><th style="width:20%">Protegida</th><th>Uso</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>main</code></td><td>Sí (máxima)</td><td>Solo recibe merges desde <code>release/vX.0</code>. Cada merge se etiqueta (<code>v1.0.0</code>).</td></tr>
+    <tr><td><code>develop</code></td><td>Sí</td><td>Integración diaria. Recibe los PR de las ramas <code>feature/</code>.</td></tr>
+    <tr><td><code>release/vX.0</code></td><td>Sí (<code>release/*</code>)</td><td>Pruebas de integración antes de pasar a <code>main</code>.</td></tr>
+    <tr><td><code>feature/&lt;nombre&gt;</code></td><td>No</td><td>Trabajo individual. Nace de <code>develop</code> y muere al fusionarse.</td></tr>
+  </tbody>
+</table>
+
+<h3>3.2 Las cuatro reglas obligatorias del taller</h3>
+<table>
+  <thead>
+    <tr><th style="width:6%">#</th><th style="width:44%">Regla</th><th>Cómo se garantiza técnicamente</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>Prohibido el <i>push</i> directo a <code>main</code> y <code>develop</code>.</td>
+      <td>Ruleset activo con <b>Require a pull request before merging</b>, <b>Restrict deletions</b> y
+      <b>Block force pushes</b>.</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>Toda funcionalidad nace de <code>develop</code> como <code>feature/nombre-tarea</code>.</td>
+      <td>Todo PR de una rama <code>feature/</code> apunta a <code>develop</code>; solo
+      <code>release/*</code> apunta a <code>main</code>.</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>PR aprobado por al menos 2 compañeros, incluido el Tech Lead.</td>
+      <td><b>Required approvals: 2</b> + <b>Require review from Code Owners</b> con el Tech Lead en
+      <code>CODEOWNERS</code>.</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>Al cerrar una fase se crea <code>release/vX.0</code>, se prueba y se fusiona a <code>main</code>
+      con etiqueta <code>git tag v1.0.0</code>.</td>
+      <td>Rama <code>release/*</code> protegida + tag creado desde la release (idealmente protegido con
+      el patrón <code>v*</code>).</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="box">
+  <strong>Alcance de este documento:</strong> la configuración técnica de las protecciones la realiza el
+  Tech Lead una sola vez. Aquí solo se describen las reglas que aplican al equipo y la forma de trabajar
+  dentro de ellas.
+</div>
+
+<!-- ==================== 4. PROCESO POR RAMAS ======================= -->
+<h2>4. Proceso para subir una rama con una parte del proyecto</h2>
+
+<p>
+  Cada integrante trabaja <b>una tarea por rama</b>, siempre creada desde <code>develop</code> y con el
+  prefijo <code>feature/</code>. La rama se sube al remoto, se abre un Pull Request hacia
+  <code>develop</code>, se consiguen las dos aprobaciones y se fusiona. La rama se elimina al finalizar.
+</p>
+
+<div class="flow">
+  <div class="step"><b>1. develop</b>Actualizar</div>
+  <div class="arrow">→</div>
+  <div class="step"><b>2. feature/</b>Crear rama</div>
+  <div class="arrow">→</div>
+  <div class="step"><b>3. Código</b>Implementar</div>
+  <div class="arrow">→</div>
+  <div class="step"><b>4. Push</b>Subir rama</div>
+  <div class="arrow">→</div>
+  <div class="step"><b>5. PR</b>Hacia develop</div>
+  <div class="arrow">→</div>
+  <div class="step"><b>6. Review</b>2 aprobaciones</div>
+  <div class="arrow">→</div>
+  <div class="step"><b>7. Merge</b>+ borrar rama</div>
+</div>
+
+<h3>4.1 Nomenclatura obligatoria de las ramas</h3>
+<p>
+  Formato: <code>feature/&lt;nombre-de-la-rama&gt;</code>. El nombre describe la tarea en
+  <b>minúsculas</b>, <b>sin espacios</b>, separando palabras con <b>guiones</b> (kebab-case) y
+  <b>sin acentos ni ñ</b>. Una rama no mezcla dos responsabilidades.
+</p>
+<table>
+  <thead><tr><th style="width:34%">Rama</th><th style="width:26%">Responsable</th><th>Contenido que monta</th></tr></thead>
+  <tbody>
+    <tr><td><code>feature/neon-datasource</code></td><td>Backend &amp; Data</td><td>Datasource remoto, modelos con <code>fromJson</code>/<code>toJson</code> e implementación del repositorio.</td></tr>
+    <tr><td><code>feature/domain-layer</code></td><td>Domain Architect</td><td>Entidades <code>Evento</code> y <code>Categoria</code>, contrato del repositorio y casos de uso.</td></tr>
+    <tr><td><code>feature/ui-components</code></td><td>UI/UX</td><td>Tema visual, calendario interactivo y tarjetas de evento.</td></tr>
+    <tr><td><code>feature/presentation-logic</code></td><td>State &amp; Integration</td><td>Bloc, pantallas e inyección de dependencias con <code>get_it</code>.</td></tr>
+    <tr><td><code>feature/auth-login</code></td><td>Cualquiera</td><td>Ejemplo de tarea puntual posterior: pantalla de inicio de sesión.</td></tr>
+    <tr><td><code>fix/error-fecha-evento</code></td><td>Cualquiera</td><td>Corrección de un error (prefijo <code>fix/</code> para bugs).</td></tr>
+  </tbody>
+</table>
+<p class="small">
+  Prohibidos: <code>feature/Domain Layer</code>, <code>feature/dominio</code> de forma ambigua,
+  <code>mi-rama</code>, <code>prueba</code>, <code>cambios</code>. El nombre debe permitir saber qué
+  contiene sin abrir el PR.
+</p>
+
+<h3>4.2 Paso a paso para subir la rama</h3>
+
+<p><b>Paso 0 · Preparación (una sola vez por integrante)</b></p>
+<pre><code>git clone https://github.com/&lt;organizacion&gt;/&lt;repositorio&gt;.git
+cd Actividad-8flutter
+git checkout develop
+flutter pub get</code></pre>
+
+<p><b>Paso 1 · Sincronizar <code>develop</code> antes de empezar</b></p>
+<pre><code>git checkout develop
+git pull origin develop</code></pre>
+<p class="small">Si no sincronizas, tu rama nace desactualizada y el PR generará conflictos.</p>
+
+<p><b>Paso 2 · Crear la rama de la tarea</b></p>
+<pre><code>git checkout -b feature/domain-layer</code></pre>
+
+<p><b>Paso 3 · Implementar solo lo que corresponde a la rama</b></p>
+<table>
+  <thead><tr><th style="width:34%">Rama</th><th>Carpetas que debe tocar</th></tr></thead>
+  <tbody>
+    <tr><td><code>feature/domain-layer</code></td><td><code>lib/features/planner/domain/entities</code>, <code>repositories</code> y <code>usecases</code></td></tr>
+    <tr><td><code>feature/neon-datasource</code></td><td><code>lib/features/planner/data/*</code> y <code>lib/core/network</code></td></tr>
+    <tr><td><code>feature/ui-components</code></td><td><code>lib/features/planner/presentation/widgets</code> y el tema en <code>lib/core/utils</code></td></tr>
+    <tr><td><code>feature/presentation-logic</code></td><td><code>presentation/bloc</code>, <code>presentation/pages</code> y el registro de <code>get_it</code></td></tr>
+  </tbody>
+</table>
+<div class="box warn">
+  <strong>Una rama = una responsabilidad.</strong> Si estás en <code>feature/domain-layer</code> no
+  modifiques <code>data/</code> ni <code>presentation/</code>: eso pertenece a otra rama y a otro
+  integrante. Si lo necesitas, coordina con el Tech Lead.
+</div>
+
+<p><b>Paso 4 · Revisar el código y hacer commits pequeños</b></p>
+<pre><code>flutter analyze          # no debe reportar errores
+git status
+git add lib/features/planner/domain/
+git commit -m "feat(domain): agrega entidades Evento y Categoria"</code></pre>
+<p class="small">
+  Formato de commit: <code>tipo(alcance): descripción en imperativo</code>. Tipos válidos:
+  <code>feat</code>, <code>fix</code>, <code>docs</code>, <code>refactor</code>, <code>test</code>,
+  <code>chore</code>.
+</p>
+
+<p><b>Paso 5 · Subir la rama al repositorio remoto</b></p>
+<pre><code>git push -u origin feature/domain-layer</code></pre>
+<p class="small">
+  El <code>-u</code> deja la rama enlazada: los siguientes <code>git push</code> funcionan sin argumentos.
+  El push a <code>feature/*</code> sí está permitido; a <code>main</code> y <code>develop</code>, no.
+</p>
+
+<p><b>Paso 6 · Abrir el Pull Request hacia <code>develop</code></b></p>
+<ol>
+  <li>Entrar al repositorio y pulsar el aviso <b>Compare &amp; pull request</b> (o
+      <b>Pull requests → New pull request</b>).</li>
+  <li>Verificar las ramas: <b>base: <code>develop</code></b> ← <b>compare: <code>feature/domain-layer</code></b>.
+      Si la base aparece como <code>main</code>, cambiarla.</li>
+  <li>Título claro, por ejemplo: <code>feat(domain): entidades y casos de uso de eventos</code>.</li>
+  <li>Completar la descripción: qué se hizo, qué carpetas se tocaron, cómo probarlo y qué issue cierra
+      (<code>Closes #12</code>).</li>
+  <li>Asignar revisores: <b>el Tech Lead</b> y al menos otro compañero.</li>
+</ol>
+
+<p><b>Paso 7 · Revisión y correcciones</b></p>
+<ul>
+  <li>Los revisores comentan en <b>Files changed</b>; el autor responde y corrige con nuevos commits
+      (no se abre otro PR).</li>
+  <li>Cada commit nuevo <b>descarta las aprobaciones anteriores</b> (regla configurada), así que se
+      aprueba al final.</li>
+  <li>Se necesitan <b>2 aprobaciones</b>, una de ellas del Tech Lead vía <code>CODEOWNERS</code>, y
+      todas las conversaciones resueltas.</li>
+</ul>
+
+<p><b>Paso 8 · Fusionar el PR</b></p>
+<p>
+  Cuando el botón se habilite, usar <b>Squash and merge</b> si el equipo adoptó historial limpio.
+  Tras el merge, pulsar <b>Delete branch</b> (GitHub también puede hacerlo automático si el Tech Lead
+  activó <i>Automatically delete head branches</i>).
+</p>
+
+<p><b>Paso 9 · Actualizar el entorno local</b></p>
+<pre><code>git checkout develop
+git pull origin develop
+git branch -d feature/domain-layer
+git fetch --prune</code></pre>
+
+<h3>4.3 Lista de verificación antes de abrir el PR</h3>
+<table>
+  <thead><tr><th style="width:6%">✔</th><th>Comprobación</th></tr></thead>
+  <tbody>
+    <tr><td>☐</td><td>La rama se creó desde <code>develop</code> actualizado y se llama <code>feature/&lt;nombre&gt;</code>.</td></tr>
+    <tr><td>☐</td><td>Solo contiene cambios de esa responsabilidad (no hay archivos de otras capas).</td></tr>
+    <tr><td>☐</td><td><code>flutter analyze</code> termina sin errores.</td></tr>
+    <tr><td>☐</td><td>No se subieron <code>.env</code>, llaves ni archivos de <code>build/</code>.</td></tr>
+    <tr><td>☐</td><td>Los commits siguen la convención y están en imperativo.</td></tr>
+    <tr><td>☐</td><td>El PR apunta a <code>develop</code>, tiene título y descripción completos.</td></tr>
+    <tr><td>☐</td><td>Están asignados los revisores (Tech Lead + un compañero).</td></tr>
+  </tbody>
+</table>
+
+<h3>4.4 Errores frecuentes y cómo resolverlos</h3>
+<table>
+  <thead><tr><th style="width:32%">Síntoma</th><th style="width:30%">Causa</th><th>Solución</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><code>GH006: Protected branch update failed</code></td>
+      <td>Intentaste hacer push directo a <code>develop</code> o <code>main</code>.</td>
+      <td>Crear la rama <code>feature/…</code>, subir allí y abrir el PR.</td>
+    </tr>
+    <tr>
+      <td><code>! [rejected] … (fetch first)</code></td>
+      <td>El remoto tiene commits que no tienes localmente.</td>
+      <td><code>git pull --rebase origin &lt;rama&gt;</code>. Nunca usar <code>--force</code> en ramas compartidas.</td>
+    </tr>
+    <tr>
+      <td>El PR muestra “This branch has conflicts”</td>
+      <td>Otra rama tocó las mismas líneas en <code>develop</code>.</td>
+      <td>Traer <code>develop</code> a la rama: <code>git checkout feature/…</code>, <code>git pull --rebase origin develop</code>, resolver, commit y push.</td>
+    </tr>
+    <tr>
+      <td>El botón <i>Merge</i> sigue bloqueado con 2 aprobaciones</td>
+      <td>Falta la aprobación del Code Owner o hay conversaciones abiertas.</td>
+      <td>Pedir revisión al Tech Lead y resolver cada comentario (<i>Resolve conversation</i>).</td>
+    </tr>
+    <tr>
+      <td>“Dismissed stale review” tras un commit nuevo</td>
+      <td>Se subió código después de aprobar.</td>
+      <td>Volver a solicitar revisión; es el comportamiento correcto.</td>
+    </tr>
+    <tr>
+      <td>El PR aparece hacia <code>main</code></td>
+      <td>La rama base por defecto del repositorio es <code>main</code>.</td>
+      <td>Editar el PR y cambiar la base a <code>develop</code> (<i>Edit → base</i>).</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>4.5 Si ya hiciste commits en la rama equivocada</h3>
+<pre><code># Mover los commits de develop a una rama nueva, sin perder trabajo
+git checkout develop
+git branch feature/mi-tarea            # guarda los commits en la rama nueva
+git reset --hard origin/develop        # develop vuelve al estado remoto
+git checkout feature/mi-tarea</code></pre>
+<div class="box warn">
+  <strong>Precaución:</strong> <code>git reset --hard</code> borra cambios locales no confirmados.
+  Úsalo solo cuando los commits ya estén seguros en otra rama.
+</div>
+
+<!-- ======================= 5. ANEXOS ============================== -->
+<h2>5. Anexos</h2>
+
+<h3>5.1 Comandos esenciales</h3>
+<table>
+  <thead><tr><th style="width:44%">Objetivo</th><th>Comando</th></tr></thead>
+  <tbody>
+    <tr><td>Ver en qué rama estoy</td><td><code>git status</code> / <code>git branch</code></td></tr>
+    <tr><td>Actualizar <code>develop</code></td><td><code>git checkout develop &amp;&amp; git pull origin develop</code></td></tr>
+    <tr><td>Crear rama de tarea</td><td><code>git checkout -b feature/nombre-tarea</code></td></tr>
+    <tr><td>Ver cambios sin confirmar</td><td><code>git diff</code></td></tr>
+    <tr><td>Preparar y confirmar</td><td><code>git add .</code> + <code>git commit -m "feat: ..."</code></td></tr>
+    <tr><td>Subir la rama</td><td><code>git push -u origin feature/nombre-tarea</code></td></tr>
+    <tr><td>Traer cambios de <code>develop</code> a mi rama</td><td><code>git pull --rebase origin develop</code></td></tr>
+    <tr><td>Ver el historial resumido</td><td><code>git --no-pager log --oneline --graph --all -20</code></td></tr>
+    <tr><td>Ver qué archivos ignora Git</td><td><code>git check-ignore -v &lt;archivo&gt;</code></td></tr>
+    <tr><td>Listar ramas remotas ya fusionadas</td><td><code>git branch -r --merged develop</code></td></tr>
+  </tbody>
+</table>
+
+<h3>5.2 Lista de verificación de entrega (GitHub)</h3>
+<table>
+  <thead><tr><th style="width:6%">✔</th><th>Requisito del taller</th></tr></thead>
+  <tbody>
+    <tr><td>☐</td><td>Repositorio con <code>main</code>, <code>develop</code> y ramas <code>feature/</code> del equipo.</td></tr>
+    <tr><td>☐</td><td>Ruleset o protección activa en <code>main</code>, <code>develop</code> y <code>release/*</code>.</td></tr>
+    <tr><td>☐</td><td>Push directo prohibido sobre <code>main</code> y <code>develop</code>.</td></tr>
+    <tr><td>☐</td><td><code>CODEOWNERS</code> con el Tech Lead y “Require review from Code Owners” activo.</td></tr>
+    <tr><td>☐</td><td>Al menos un PR fusionado con 2 aprobaciones visibles en el historial.</td></tr>
+    <tr><td>☐</td><td>Rama <code>release/v1.0</code> creada y fusionada a <code>main</code>.</td></tr>
+    <tr><td>☐</td><td>Etiqueta <code>v1.0.0</code> publicada sobre el commit desplegado.</td></tr>
+    <tr><td>☐</td><td><code>README.md</code> con los enlaces reales de API y Web.</td></tr>
+    <tr><td>☐</td><td>Ningún archivo <code>.env</code>, llave o credencial en el historial de Git.</td></tr>
+  </tbody>
+</table>
+
+<h3>5.3 Glosario</h3>
+<table>
+  <thead><tr><th style="width:26%">Término</th><th>Significado en este proyecto</th></tr></thead>
+  <tbody>
+    <tr><td><b>Feature branch</b></td><td>Rama corta creada desde <code>develop</code> para una sola tarea.</td></tr>
+    <tr><td><b>Pull Request (PR)</b></td><td>Solicitud de integración de una rama a otra, sujeta a revisión.</td></tr>
+    <tr><td><b>Ruleset</b></td><td>Conjunto de reglas de GitHub que protegen ramas y tags.</td></tr>
+    <tr><td><b>CODEOWNERS</b></td><td>Archivo que define quién debe aprobar los cambios.</td></tr>
+    <tr><td><b>Squash</b></td><td>Unir varios commits del PR en uno solo al fusionar.</td></tr>
+    <tr><td><b>Release</b></td><td>Rama de estabilización previa al paso a producción.</td></tr>
+    <tr><td><b>Usecase</b></td><td>Caso de uso del dominio: una acción de negocio concreta.</td></tr>
+  </tbody>
+</table>
+
+<p class="small center" style="margin-top:26px">
+  Planner · Gestor de Agenda — Guía de estructura del repositorio, reglas y proceso de ramas · Versión 1.1<br>
+  Documento académico del SENA. Se regenera desde <code>docs/guia-estructura-y-gitflow.html</code>.
+</p>
+
+</body>
+</html>
