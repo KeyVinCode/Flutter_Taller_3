@@ -1,14 +1,18 @@
-import '../repositories/evento_repository.dart';
+import '../repositories/agenda_repository.dart';
 
+/// Caso de uso: eliminar un evento del usuario autenticado.
 class EliminarEvento {
-  final EventoRepository repository;
-
   const EliminarEvento(this.repository);
 
-  Future<void> call(String id) async {
-    if (id.trim().isEmpty) {
+  final AgendaRepository repository;
+
+  Future<void> call({required int id, required int usuarioId}) async {
+    if (id <= 0) {
       throw ArgumentError('El ID del evento es obligatorio para eliminar.');
     }
-    return repository.eliminarEvento(id);
+    if (usuarioId <= 0) {
+      throw ArgumentError('El usuario es obligatorio para eliminar un evento.');
+    }
+    return repository.eliminarEvento(id: id, usuarioId: usuarioId);
   }
 }
