@@ -1,3 +1,7 @@
+/// Evento de la agenda: objeto de negocio puro.
+///
+/// Refleja la tabla `eventos` del esquema SQL y no depende de Flutter,
+/// de la red ni de la base de datos.
 class Evento {
   const Evento({
     this.id,
@@ -22,4 +26,8 @@ class Evento {
   final DateTime fechaFin;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+
+  bool get tieneTituloValido => titulo.trim().isNotEmpty;
+
+  bool get tieneFechasValidas => !fechaFin.isBefore(fechaInicio);
 }
