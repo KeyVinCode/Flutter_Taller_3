@@ -5,6 +5,7 @@ import 'package:actividad_8flutter/core/errors/agenda_repository_exception.dart'
 import 'package:actividad_8flutter/core/network/postgrest_client.dart';
 import 'package:actividad_8flutter/features/planner/data/datasources/planner_remote_data_source.dart';
 import 'package:actividad_8flutter/features/planner/data/repositories/agenda_repository_impl.dart';
+import 'package:actividad_8flutter/features/planner/domain/entities/categoria.dart';
 import 'package:actividad_8flutter/features/planner/domain/entities/evento.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -89,6 +90,40 @@ void main() {
       repository.crearEvento(_newEvent()),
       throwsA(isA<AgendaNetworkException>()),
     );
+  });
+
+  test('mapea las categorías como entidades de dominio', () async {
+    final client = _client(
+      MockClient((request) async {
+        expect(request.url.path, '/categorias');
+        expect(request.url.queryParameters['usuario_id'], 'eq.3');
+        return http.Response.bytes(
+          utf8.encode(
+            jsonEncode([
+              {
+                'id': 4,
+                'usuario_id': 3,
+                'nombre': 'Trabajo',
+                'color_hex': '#00897B',
+                'created_at': '2026-11-01T09:00:00Z',
+              },
+            ]),
+          ),
+          200,
+        );
+      }),
+    );
+    addTearDown(client.close);
+    final repository = AgendaRepositoryImpl(
+      remoteDataSource: PlannerRemoteDataSource(client: client),
+    );
+
+    final categorias = await repository.listarCategorias(usuarioId: 3);
+
+    expect(categorias.single, isA<Categoria>());
+    expect(categorias.single.id, 4);
+    expect(categorias.single.nombre, 'Trabajo');
+    expect(categorias.single.colorHex, '#00897B');
   });
 }
 

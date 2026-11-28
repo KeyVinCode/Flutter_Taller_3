@@ -31,9 +31,10 @@ Alcance funcional:
 | --- | --- | --- |
 | Estructura Clean Architecture (`lib/`) | ✅ Lista | Encarpetado completo del taller, con `.gitkeep` en carpetas vacías |
 | Proyecto Flutter (Android + Web) | ✅ Listo | Proyecto y targets Android/Web creados |
-| Capa `domain` (entidades, contratos, casos de uso) | ⏳ En curso | Responsable: Domain Architect |
+| Capa `domain` (entidades, contratos, casos de uso) | ✅ Implementado | Entidades, contratos y casos de uso de eventos y categorías |
 | Puente PostgREST (cliente, datasource y models) | ✅ Implementado | Usa JWT externo; falta configurar/desplegar la API y sus permisos |
-| Capa `presentation` (bloc, pages, widgets) | ⏳ En curso | Responsables: UI/UX y State & Integration Dev |
+| Capa `presentation` (bloc, pages, widgets) | ✅ Implementado | Bloc, formulario crear/editar, filtro mensual, borrado con confirmación y snackbars |
+| Tema y widgets reutilizables | ✅ Implementado | `AppTheme`, `PlannerCalendar`, `EventCard`, estados de carga/error/vacío, chips y editor de eventos |
 | Esquema SQL en Neon | ⏳ Pendiente | Responsable: Tech Lead / DevOps |
 | API REST desplegada | ⏳ Pendiente | — |
 | Build Web desplegada | ⏳ Pendiente | — |
@@ -70,10 +71,10 @@ Alcance funcional:
 | Capa / Área | Tecnología | Uso |
 | --- | --- | --- |
 | Framework | Flutter `>= 3.24` (Dart `>= 3.5`) | UI multiplataforma (Android y Web) |
-| Gestión de estado | `flutter_bloc` + `equatable` | Eventos y estados inmutables |
-| Inyección de dependencias | Pendiente | Registrar datasources, repositorios y casos de uso al integrar `domain` |
+| Gestión de estado | `flutter_bloc` | Eventos, estados inmutables y `BlocListener` para feedback |
+| Inyección de dependencias | `get_it` | Registra sesión, cliente, datasource, repositorio, casos de uso y bloc |
 | Cliente HTTP | `http` | Consumo de PostgREST |
-| Formato de fechas | `intl` | Localización `es_CO` y formateo de fecha/hora |
+| Formato de fechas | Utilidades propias (`DateFormatters`) | Fechas y horas en español para `es_CO` |
 | Backend | Neon Data API (PostgREST) | Acceso REST a PostgreSQL con JWT y RLS |
 | Base de datos | Neon · PostgreSQL Serverless | Persistencia de eventos y categorías |
 
@@ -125,6 +126,70 @@ lib/
 `EventoModel` serializa el esquema SQL con `fromJson`/`toJson` y payloads separados para
 inserción y actualización. El repositorio conserva los errores PostgREST y los clasifica como
 errores de red, autenticación, SQLSTATE, API o formato para que presentación pueda manejarlos.
+
+---
+
+## 🎨 Tema y widgets reutilizables
+
+La capa visual vive en `core/theme`, `core/constants`, `core/utils` y
+`features/planner/presentation/widgets`. Todo widget consume `Theme.of(context)`
+(Material 3), por lo que funciona en modo claro y oscuro sin valores de color fijos.
+
+| Archivo | Propósito |
+| --- | --- |
+| `core/constants/app_colors.dart` | Paleta base (semillas, estados y fondos de snackbars) |
+| `core/theme/app_theme.dart` | `AppTheme.light` / `AppTheme.dark` con `ColorScheme.fromSeed`, tipografía y estilos de tarjeta/input |
+| `core/utils/color_utils.dart` | `colorCategoriaPorIndice` y `ColorEventoResolver` para asignar color por categoría |
+| `core/utils/date_formatters.dart` | Fechas y horas en `es_CO` (`mesesLargos`, `formatearFechaLarga`, rangos) |
+| `widgets/planner_calendar.dart` | Calendario mensual con inicio en lunes, navegación de mes, botón “Hoy”, puntos por día y selección controlada o autónoma |
+| `widgets/event_card.dart` | Tarjeta de evento con borde de color por categoría, horario, ubicación, categoría, estado y menú de acciones |
+| `widgets/category_chip.dart` / `widgets/event_status_chip.dart` | Etiquetas de categoría (color) y estado (programado, en curso, finalizado) |
+| `widgets/section_header.dart` | Encabezado de sección con icono, subtítulo y acción opcional |
+| `widgets/empty_state.dart` / `widgets/error_view.dart` / `widgets/loading_view.dart` | Estados vacío, error con reintento y carga |
+| `widgets/app_snackbar.dart` | Notificaciones `info`, `exito`, `error` y `advertencia` con contraste accesible |
+| `widgets/custom_button.dart` / `widgets/custom_input.dart` | Botón e input reutilizables para formularios |
+
+`main.dart` configura `ThemeMode.system`, el locale `es_CO` con
+`flutter_localizations` y expone `PlannerApp(home: ...)` para inyectar la pantalla
+inicial en pruebas.
+
+### Pruebas de la capa visual
+
+```bash
+flutter analyze
+flutter test
+```
+
+`test/widget_test.dart` valida el arranque con un repositorio falso.
+`test/features/planner/presentation/widgets/planner_widgets_test.dart` cubre
+`EventCard`, `PlannerCalendar`, estados y `AppSnackBar`. Las pruebas de la fase 3 viven en
+`test/features/planner/presentation/bloc/evento_bloc_test.dart`,
+`test/features/planner/presentation/pages/evento_form_page_test.dart` y
+`test/features/planner/presentation/pages/planner_home_page_test.dart` (carga, filtros,
+crear/editar, confirmación de borrado, snackbars y navegación).
+
+---
+
+## 🧠 Lógica de presentación e integración
+
+| Archivo | Propósito |
+| --- | --- |
+| `core/session/sesion_actual.dart` | Usuario y token de la sesión; lee `NEON_USUARIO_ID` y `NEON_ACCESS_TOKEN` hasta que exista login |
+| `core/utils/error_messages.dart` | Traduce errores del repositorio a mensajes amigables y sin detalles internos |
+| `presentation/bloc/evento_bloc.dart` | Carga con filtros, crear/actualizar/eliminar, recarga tras escrituras y estados de operación que conservan la lista |
+| `presentation/pages/planner_home_page.dart` | Calendario + listado, FAB “Nuevo evento”, edición desde la tarjeta, confirmación de borrado, snackbars y recarga por mes |
+| `presentation/pages/evento_form_page.dart` | Formulario crear/editar con `Validators`, selectores de fecha/hora, categorías y estado de envío |
+| `domain/usecases/listar_categorias.dart` / `crear_categoria.dart` | Casos de uso de categorías consumidos por el formulario y disponibles para pantallas futuras |
+
+El filtro mensual envía a PostgREST el rango del mes visible como **solapamiento**
+(`fecha_fin >= desde` y `fecha_inicio <= hasta`), de modo que un evento que comienza en un mes
+anterior y termina en el actual también se muestra. Al crear, editar o eliminar, el bloc recarga
+la agenda con el último filtro usado.
+
+Los errores de escritura no reemplazan la pantalla con `ErrorView`: se emite
+`EventoOperacionFallida` conservando los eventos previos y el `BlocListener` muestra un snackbar.
+Al guardar desde el formulario, el resultado se devuelve con `Navigator.pop(mensaje)` para que el
+home muestre el éxito una sola vez.
 
 ---
 
@@ -180,13 +245,13 @@ El esquema actual no incluye `todo_el_dia` ni recordatorios. Las fechas se enví
 
 `PlannerRemoteDataSource` consulta las tablas `eventos` y `categorias` de PostgREST. La URL
 configurada debe ser la raíz de la API PostgREST de Neon e incluir el prefijo/versionado que
-indique la consola de Neon. La capa envía un JWT como `Authorization: Bearer ...`; el token lo
-provee el servicio de autenticación de la aplicación, nunca se guarda en el código ni en
-parámetros de compilación.
+indique la consola de Neon. La capa envía un JWT como `Authorization: Bearer ...`. El token y el
+usuario se obtienen de `SesionActual`, que hasta que exista login los lee de `--dart-define`
+(`NEON_ACCESS_TOKEN` y `NEON_USUARIO_ID`); nunca deben escribirse en el código ni en el repo.
 
 | Operación | Recurso PostgREST | Comportamiento |
 | --- | --- | --- |
-| Listar eventos | `GET /eventos` | Filtra por usuario; opcionalmente por fechas y categoría |
+| Listar eventos | `GET /eventos` | Filtra por usuario; si se envían fechas, devuelve los eventos que se **solapan** con el rango (para el filtro mensual) y opcionalmente filtra por categoría |
 | Crear evento | `POST /eventos` | Envía las columnas del esquema y recibe la fila creada |
 | Actualizar evento | `PATCH /eventos?id=eq.<id>&usuario_id=eq.<usuario>` | Actualiza campos y `updated_at` |
 | Eliminar evento | `DELETE /eventos?id=eq.<id>&usuario_id=eq.<usuario>` | Elimina el evento del usuario |
@@ -196,18 +261,20 @@ parámetros de compilación.
 ### Configurar y usar
 
 ```bash
-flutter run -d chrome --dart-define=NEON_DATA_API_URL=https://<endpoint-postgrest>
-flutter run -d android --dart-define=NEON_DATA_API_URL=https://<endpoint-postgrest>
+flutter run -d chrome --dart-define=NEON_DATA_API_URL=https://<endpoint-postgrest> \
+  --dart-define=NEON_ACCESS_TOKEN=<jwt> --dart-define=NEON_USUARIO_ID=1
+flutter run -d android --dart-define=NEON_DATA_API_URL=https://<endpoint-postgrest> \
+  --dart-define=NEON_ACCESS_TOKEN=<jwt> --dart-define=NEON_USUARIO_ID=1
 ```
 
-`NeonDataApiConfig.fromEnvironment()` lee esa URL. Al integrar el proveedor de autenticación,
-inyecta su función de token en `PostgrestClient` y registra el datasource en el punto de
-inyección de dependencias:
+`NeonDataApiConfig.fromEnvironment()` lee la URL y `SesionActual` lee el usuario/token. Al
+integrar el proveedor de autenticación real, reemplaza `SesionActual.desdeEntorno` por la sesión
+del login; el resto de la aplicación no necesita cambios:
 
 ```dart
 final client = PostgrestClient(
   config: NeonDataApiConfig.fromEnvironment(),
-  accessTokenProvider: authSession.getAccessToken,
+  accessTokenProvider: () async => sl<SesionActual>().accessToken,
 );
 final plannerDataSource = PlannerRemoteDataSource(client: client);
 ```

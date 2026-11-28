@@ -12,6 +12,11 @@ class CargarEventos extends EventoEvent {
   final int? categoriaId;
 }
 
+/// Vuelve a cargar la lista con el último filtro usado.
+class RecargarEventos extends EventoEvent {
+  const RecargarEventos();
+}
+
 class CrearEventoSolicitado extends EventoEvent {
   const CrearEventoSolicitado(this.evento);
 

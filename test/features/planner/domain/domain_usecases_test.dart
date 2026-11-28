@@ -2,8 +2,10 @@ import 'package:actividad_8flutter/features/planner/domain/entities/categoria.da
 import 'package:actividad_8flutter/features/planner/domain/entities/evento.dart';
 import 'package:actividad_8flutter/features/planner/domain/repositories/agenda_repository.dart';
 import 'package:actividad_8flutter/features/planner/domain/usecases/actualizar_evento.dart';
+import 'package:actividad_8flutter/features/planner/domain/usecases/crear_categoria.dart';
 import 'package:actividad_8flutter/features/planner/domain/usecases/crear_evento.dart';
 import 'package:actividad_8flutter/features/planner/domain/usecases/eliminar_evento.dart';
+import 'package:actividad_8flutter/features/planner/domain/usecases/listar_categorias.dart';
 import 'package:actividad_8flutter/features/planner/domain/usecases/listar_eventos.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -67,13 +69,22 @@ class _FakeAgendaRepository implements AgendaRepository {
   }
 
   @override
-  Future<void> eliminarEvento({
-    required int id,
-    required int usuarioId,
-  }) async {
+  Future<void> eliminarEvento({required int id, required int usuarioId}) async {
     llamadas.add('eliminarEvento');
     ultimoIdEliminado = id;
     ultimoUsuarioEliminado = usuarioId;
+  }
+
+  @override
+  Future<List<Categoria>> listarCategorias({required int usuarioId}) async {
+    llamadas.add('listarCategorias');
+    return const <Categoria>[Categoria(id: 1, usuarioId: 1, nombre: 'Trabajo')];
+  }
+
+  @override
+  Future<Categoria> crearCategoria(Categoria categoria) async {
+    llamadas.add('crearCategoria');
+    return categoria;
   }
 }
 
@@ -223,6 +234,45 @@ void main() {
           usuarioId: 1,
           desde: DateTime(2026, 11, 30),
           hasta: DateTime(2026, 11, 1),
+        ),
+        throwsArgumentError,
+      );
+      expect(repository.llamadas, isEmpty);
+    });
+  });
+
+  group('ListarCategorias', () {
+    test('delega en el repositorio con el usuario indicado', () async {
+      final categorias = await ListarCategorias(repository)(usuarioId: 1);
+
+      expect(categorias, hasLength(1));
+      expect(categorias.single.nombre, 'Trabajo');
+      expect(repository.llamadas, ['listarCategorias']);
+    });
+
+    test('rechaza un usuario inválido', () async {
+      await expectLater(
+        ListarCategorias(repository)(usuarioId: 0),
+        throwsArgumentError,
+      );
+      expect(repository.llamadas, isEmpty);
+    });
+  });
+
+  group('CrearCategoria', () {
+    test('delega en el repositorio cuando el nombre es válido', () async {
+      const categoria = Categoria(usuarioId: 1, nombre: 'Personal');
+
+      final resultado = await CrearCategoria(repository)(categoria);
+
+      expect(resultado, same(categoria));
+      expect(repository.llamadas, ['crearCategoria']);
+    });
+
+    test('rechaza un nombre vacío', () async {
+      await expectLater(
+        CrearCategoria(repository)(
+          const Categoria(usuarioId: 1, nombre: '   '),
         ),
         throwsArgumentError,
       );

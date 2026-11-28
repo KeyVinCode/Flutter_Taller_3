@@ -1,17 +1,13 @@
-class CategoriaModel {
-  const CategoriaModel({
-    this.id,
-    required this.usuarioId,
-    required this.nombre,
-    this.colorHex = '#2196F3',
-    this.createdAt,
-  });
+import '../../domain/entities/categoria.dart';
 
-  final int? id;
-  final int usuarioId;
-  final String nombre;
-  final String colorHex;
-  final DateTime? createdAt;
+class CategoriaModel extends Categoria {
+  const CategoriaModel({
+    super.id,
+    required super.usuarioId,
+    required super.nombre,
+    super.colorHex,
+    super.createdAt,
+  });
 
   factory CategoriaModel.fromJson(Map<String, dynamic> json) {
     final createdAtValue = json['created_at'];
@@ -23,6 +19,16 @@ class CategoriaModel {
       createdAt: createdAtValue == null
           ? null
           : DateTime.parse(createdAtValue as String),
+    );
+  }
+
+  factory CategoriaModel.fromEntity(Categoria categoria) {
+    return CategoriaModel(
+      id: categoria.id,
+      usuarioId: categoria.usuarioId,
+      nombre: categoria.nombre,
+      colorHex: categoria.colorHex,
+      createdAt: categoria.createdAt,
     );
   }
 
