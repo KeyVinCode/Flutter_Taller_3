@@ -1,3 +1,4 @@
+import '../entities/categoria.dart';
 import '../entities/evento.dart';
 
 abstract interface class AgendaRepository {
@@ -13,4 +14,8 @@ abstract interface class AgendaRepository {
   Future<Evento> actualizarEvento(Evento evento);
 
   Future<void> eliminarEvento({required int id, required int usuarioId});
+
+  Future<List<Categoria>> listarCategorias({required int usuarioId});
+
+  Future<Categoria> crearCategoria(Categoria categoria);
 }

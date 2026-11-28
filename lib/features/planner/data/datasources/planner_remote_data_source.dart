@@ -19,10 +19,10 @@ class PlannerRemoteDataSource {
       'order': 'fecha_inicio.asc',
     };
     if (desde != null) {
-      query['fecha_inicio'] = 'gte.${desde.toUtc().toIso8601String()}';
+      query['fecha_fin'] = 'gte.${desde.toUtc().toIso8601String()}';
     }
     if (hasta != null) {
-      query['fecha_fin'] = 'lte.${hasta.toUtc().toIso8601String()}';
+      query['fecha_inicio'] = 'lte.${hasta.toUtc().toIso8601String()}';
     }
     if (categoriaId != null) {
       query['categoria_id'] = 'eq.$categoriaId';

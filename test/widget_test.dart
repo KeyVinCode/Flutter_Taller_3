@@ -7,6 +7,7 @@
 
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:actividad_8flutter/features/planner/domain/entities/categoria.dart';
 import 'package:actividad_8flutter/features/planner/domain/entities/evento.dart';
 import 'package:actividad_8flutter/features/planner/domain/repositories/agenda_repository.dart';
 import 'package:actividad_8flutter/features/planner/domain/usecases/actualizar_evento.dart';
@@ -28,6 +29,7 @@ void main() {
       crearEvento: CrearEvento(repositorio),
       actualizarEvento: ActualizarEvento(repositorio),
       eliminarEvento: EliminarEvento(repositorio),
+      usuarioId: 1,
     );
     addTearDown(bloc.close);
     bloc.add(const CargarEventos());
@@ -61,4 +63,11 @@ class _RepositorioAgendaFalso implements AgendaRepository {
     required int id,
     required int usuarioId,
   }) async {}
+
+  @override
+  Future<List<Categoria>> listarCategorias({required int usuarioId}) async =>
+      const <Categoria>[];
+
+  @override
+  Future<Categoria> crearCategoria(Categoria categoria) async => categoria;
 }

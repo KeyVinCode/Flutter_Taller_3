@@ -5,9 +5,11 @@ import 'package:http/http.dart' as http;
 import '../../../../core/errors/agenda_repository_exception.dart';
 import '../../../../core/errors/authentication_required_exception.dart';
 import '../../../../core/errors/postgrest_exception.dart';
+import '../../domain/entities/categoria.dart';
 import '../../domain/entities/evento.dart';
 import '../../domain/repositories/agenda_repository.dart';
 import '../datasources/planner_remote_data_source.dart';
+import '../models/categoria_model.dart';
 import '../models/evento_model.dart';
 
 class AgendaRepositoryImpl implements AgendaRepository {
@@ -53,6 +55,24 @@ class AgendaRepositoryImpl implements AgendaRepository {
   Future<void> eliminarEvento({required int id, required int usuarioId}) {
     return _manejarErrores(
       () => remoteDataSource.eliminarEvento(id: id, usuarioId: usuarioId),
+    );
+  }
+
+  @override
+  Future<List<Categoria>> listarCategorias({required int usuarioId}) {
+    return _manejarErrores(() async {
+      final categorias = await remoteDataSource.listarCategorias(
+        usuarioId: usuarioId,
+      );
+      return List<Categoria>.of(categorias);
+    });
+  }
+
+  @override
+  Future<Categoria> crearCategoria(Categoria categoria) {
+    return _manejarErrores(
+      () =>
+          remoteDataSource.crearCategoria(CategoriaModel.fromEntity(categoria)),
     );
   }
 

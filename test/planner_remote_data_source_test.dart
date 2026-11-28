@@ -18,8 +18,12 @@ void main() {
         expect(request.url.queryParameters['usuario_id'], 'eq.5');
         expect(request.url.queryParameters['categoria_id'], 'eq.2');
         expect(
-          request.url.queryParameters['fecha_inicio'],
+          request.url.queryParameters['fecha_fin'],
           'gte.2026-11-01T00:00:00.000Z',
+        );
+        expect(
+          request.url.queryParameters['fecha_inicio'],
+          'lte.2026-12-01T00:00:00.000Z',
         );
         return http.Response.bytes(
           utf8.encode(
@@ -48,6 +52,7 @@ void main() {
     final eventos = await dataSource.listarEventos(
       usuarioId: 5,
       desde: DateTime.utc(2026, 11),
+      hasta: DateTime.utc(2026, 12),
       categoriaId: 2,
     );
 

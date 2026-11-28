@@ -4,22 +4,27 @@ import '../../features/planner/data/datasources/planner_remote_data_source.dart'
 import '../../features/planner/data/repositories/agenda_repository_impl.dart';
 import '../../features/planner/domain/repositories/agenda_repository.dart';
 import '../../features/planner/domain/usecases/actualizar_evento.dart';
+import '../../features/planner/domain/usecases/crear_categoria.dart';
 import '../../features/planner/domain/usecases/crear_evento.dart';
 import '../../features/planner/domain/usecases/eliminar_evento.dart';
+import '../../features/planner/domain/usecases/listar_categorias.dart';
 import '../../features/planner/domain/usecases/listar_eventos.dart';
 import '../../features/planner/presentation/bloc/evento_bloc.dart';
 import '../constants/neon_data_api_config.dart';
 import '../network/postgrest_client.dart';
+import '../session/sesion_actual.dart';
 
 /// Instancia global del service locator.
 final sl = GetIt.instance;
 
 Future<void> initDependencies() async {
   // Core
+  sl.registerLazySingleton<SesionActual>(SesionActual.desdeEntorno);
+
   sl.registerLazySingleton<PostgrestClient>(
     () => PostgrestClient(
       config: NeonDataApiConfig.fromEnvironment(),
-      accessTokenProvider: _accessToken,
+      accessTokenProvider: () async => sl<SesionActual>().accessToken,
     ),
   );
 
@@ -46,6 +51,12 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<EliminarEvento>(
     () => EliminarEvento(sl<AgendaRepository>()),
   );
+  sl.registerLazySingleton<ListarCategorias>(
+    () => ListarCategorias(sl<AgendaRepository>()),
+  );
+  sl.registerLazySingleton<CrearCategoria>(
+    () => CrearCategoria(sl<AgendaRepository>()),
+  );
 
   // Bloc (factory: cada pantalla crea su propia instancia)
   sl.registerFactory<EventoBloc>(
@@ -54,13 +65,7 @@ Future<void> initDependencies() async {
       crearEvento: sl<CrearEvento>(),
       actualizarEvento: sl<ActualizarEvento>(),
       eliminarEvento: sl<EliminarEvento>(),
+      usuarioId: sl<SesionActual>().usuarioId,
     ),
   );
-}
-
-/// Token temporal hasta que exista la pantalla de login.
-/// Se define con --dart-define=NEON_ACCESS_TOKEN=... (nunca escrito en el código).
-Future<String?> _accessToken() async {
-  const token = String.fromEnvironment('NEON_ACCESS_TOKEN');
-  return token.isEmpty ? null : token;
 }
