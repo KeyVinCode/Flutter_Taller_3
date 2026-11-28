@@ -34,6 +34,7 @@ Alcance funcional:
 | Capa `domain` (entidades, contratos, casos de uso) | ⏳ En curso | Responsable: Domain Architect |
 | Puente PostgREST (cliente, datasource y models) | ✅ Implementado | Usa JWT externo; falta configurar/desplegar la API y sus permisos |
 | Capa `presentation` (bloc, pages, widgets) | ⏳ En curso | Responsables: UI/UX y State & Integration Dev |
+| Tema y widgets reutilizables | ✅ Implementado | `AppTheme`, `PlannerCalendar`, `EventCard`, estados de carga/error/vacío y chips; falta el editor de eventos |
 | Esquema SQL en Neon | ⏳ Pendiente | Responsable: Tech Lead / DevOps |
 | API REST desplegada | ⏳ Pendiente | — |
 | Build Web desplegada | ⏳ Pendiente | — |
@@ -125,6 +126,43 @@ lib/
 `EventoModel` serializa el esquema SQL con `fromJson`/`toJson` y payloads separados para
 inserción y actualización. El repositorio conserva los errores PostgREST y los clasifica como
 errores de red, autenticación, SQLSTATE, API o formato para que presentación pueda manejarlos.
+
+---
+
+## 🎨 Tema y widgets reutilizables
+
+La capa visual vive en `core/theme`, `core/constants`, `core/utils` y
+`features/planner/presentation/widgets`. Todo widget consume `Theme.of(context)`
+(Material 3), por lo que funciona en modo claro y oscuro sin valores de color fijos.
+
+| Archivo | Propósito |
+| --- | --- |
+| `core/constants/app_colors.dart` | Paleta base (semillas, estados y fondos de snackbars) |
+| `core/theme/app_theme.dart` | `AppTheme.light` / `AppTheme.dark` con `ColorScheme.fromSeed`, tipografía y estilos de tarjeta/input |
+| `core/utils/color_utils.dart` | `colorCategoriaPorIndice` y `ColorEventoResolver` para asignar color por categoría |
+| `core/utils/date_formatters.dart` | Fechas y horas en `es_CO` (`mesesLargos`, `formatearFechaLarga`, rangos) |
+| `widgets/planner_calendar.dart` | Calendario mensual con inicio en lunes, navegación de mes, botón “Hoy”, puntos por día y selección controlada o autónoma |
+| `widgets/event_card.dart` | Tarjeta de evento con borde de color por categoría, horario, ubicación, categoría, estado y menú de acciones |
+| `widgets/category_chip.dart` / `widgets/event_status_chip.dart` | Etiquetas de categoría (color) y estado (programado, en curso, finalizado) |
+| `widgets/section_header.dart` | Encabezado de sección con icono, subtítulo y acción opcional |
+| `widgets/empty_state.dart` / `widgets/error_view.dart` / `widgets/loading_view.dart` | Estados vacío, error con reintento y carga |
+| `widgets/app_snackbar.dart` | Notificaciones `info`, `exito`, `error` y `advertencia` con contraste accesible |
+| `widgets/custom_button.dart` / `widgets/custom_input.dart` | Botón e input reutilizables para formularios |
+
+`main.dart` configura `ThemeMode.system`, el locale `es_CO` con
+`flutter_localizations` y expone `PlannerApp(home: ...)` para inyectar la pantalla
+inicial en pruebas.
+
+### Pruebas de la capa visual
+
+```bash
+flutter analyze
+flutter test
+```
+
+`test/widget_test.dart` valida el arranque con un repositorio falso y
+`test/features/planner/presentation/widgets/planner_widgets_test.dart` cubre
+`EventCard`, `PlannerCalendar`, estados y `AppSnackBar`.
 
 ---
 
