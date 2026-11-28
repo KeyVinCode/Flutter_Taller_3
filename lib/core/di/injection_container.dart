@@ -7,6 +7,7 @@ import '../../features/planner/domain/usecases/actualizar_evento.dart';
 import '../../features/planner/domain/usecases/crear_evento.dart';
 import '../../features/planner/domain/usecases/eliminar_evento.dart';
 import '../../features/planner/domain/usecases/listar_eventos.dart';
+import '../../features/planner/presentation/bloc/evento_bloc.dart';
 import '../constants/neon_data_api_config.dart';
 import '../network/postgrest_client.dart';
 
@@ -44,6 +45,16 @@ Future<void> initDependencies() async {
   );
   sl.registerLazySingleton<EliminarEvento>(
     () => EliminarEvento(sl<AgendaRepository>()),
+  );
+
+  // Bloc (factory: cada pantalla crea su propia instancia)
+  sl.registerFactory<EventoBloc>(
+    () => EventoBloc(
+      listarEventos: sl<ListarEventos>(),
+      crearEvento: sl<CrearEvento>(),
+      actualizarEvento: sl<ActualizarEvento>(),
+      eliminarEvento: sl<EliminarEvento>(),
+    ),
   );
 }
 
