@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'core/di/injection_container.dart';
+import 'features/planner/presentation/pages/planner_home_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,22 +26,6 @@ class PlannerApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: const PlannerHomePage(),
-    );
-  }
-}
-
-/// Pantalla provisional mientras se implementa `presentation/pages`.
-class PlannerHomePage extends StatelessWidget {
-  const PlannerHomePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text('Planner'),
-      ),
-      body: const Center(child: Text('Gestor de Agenda')),
     );
   }
 }
